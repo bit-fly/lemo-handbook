@@ -1,0 +1,25 @@
+Lemo-Opuscar local handbook
+
+Original project and author: LemoLab / Lemomo
+Original repository: https://github.com/lemomo-ai/lemo-opuscar
+Original gallery: https://lemomo-ai.github.io/lemo-opuscar/
+Snapshot revision: f17136060781a0068a7951245a3aa7835a7230de
+
+Code and documentation: MIT. See source/LICENSE.
+Demo videos and their still frames: Creative Commons Attribution 4.0.
+License: https://creativecommons.org/licenses/by/4.0/
+
+The original still-image bytes are preserved without edits. The local interface
+scales them for display. This handbook adds a new independent interface and a
+Chinese reading guide; it is not an official LemoLab product. Invocation
+templates are editorial additions and are labeled separately from original
+style prompts.
+
+Third-party material retains its original licenses. See the saved source
+README.zh-CN.md and each source/styles/<slug>/demo/CREDITS file. Attribution and
+other license files nested in the original demo folders are retained as well.
+The handbook does not download, redistribute, or embed the demo videos/audio.
+
+The original README excludes three voice recordings from CC BY 4.0:
+Game Show Flat's macOS say shouts; Paper-cut Lightbox's Edge TTS narration; and
+Broadcast News Package's Doubao TTS narration. None are included here.

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>放映阅读室 · Lemo-Opuscar 本地手册</title>
+  <link rel="stylesheet" href="../assets/handbook.css">
+  <script defer src="../assets/content.js"></script>
+  <script defer src="../assets/handbook.js"></script>
+</head>
+<body data-layout="cinema" data-root="../">
+  <a class="skip-link" href="#catalog">跳到风格目录</a>
+  <header class="masthead">
+    <a class="identity" href="../index.html"><span class="wordmark">Lemo–Opuscar</span><span class="edition">本地使用手册</span></a>
+    <nav class="toplinks" aria-label="使用指南"><button type="button" data-guide="start">使用指南</button><button type="button" data-guide="director">导演手册</button><button type="button" data-guide="technique">制作与工具</button><span class="offline-indicator">图片与文档可离线阅读</span></nav>
+  </header>
+  <nav id="viewMode" class="view-toolbar" aria-label="切换阅读方式"><span>阅读方式</span><div class="layout-switch"><a href="catalog.html" data-layout-link="catalog">图像目录</a><a href="workbench.html" data-layout-link="workbench">阅读工作台</a><a href="cinema.html" data-layout-link="cinema" aria-current="page">放映阅读室</a></div><button type="button" data-guide="start">使用指南</button></nav>
+  <main class="page">
+    <div class="cinema-heading"><h1>每一种画面，都有它的镜头语言。</h1><p>从一帧进入，读懂一段影片。</p></div>
+    <section class="screen-layout" aria-label="精选影片风格">
+      <figure class="feature-screen"><img id="featureImage" src="../source/styleboard/img/opuscar98/01.jpg" alt="OPUSCAR 98 代码风格演示画面"><figcaption><span>官方 Demo 画面 · 非电影原片</span><span id="featureYear"></span></figcaption></figure>
+      <div class="feature-copy"><h2 id="featureTitle"></h2><h3 id="featureStyle"></h3><p id="featureDescription"></p><button id="featureOpen" type="button" class="primary" data-feature="1">阅读提示词与镜头编排</button></div>
+    </section>
+    <nav id="filmstrip" class="filmstrip" aria-label="切换预览影片"></nav>
+    <section id="catalog" aria-label="完整资源目录">
+      <div class="catalog-toolbar">
+        <nav class="collection-tabs" aria-label="资源集合"><button type="button" data-mode="styles">技能风格库 <span>66</span></button><button type="button" data-mode="films">OPUSCAR 98 <span>98</span></button></nav>
+        <label class="search-field"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 5 5"></path></svg><input id="search" type="search" placeholder="搜索片名、风格、导演关键词…" aria-label="搜索当前资源集合"><kbd>/</kbd></label>
+      </div>
+      <div class="filter-shelf"><p id="filterLabel" class="filter-label">按影片年代</p><nav id="filters" class="filters" aria-label="分类筛选"></nav></div>
+      <div class="results-heading"><div><h2 id="resultTitle">OPUSCAR 98 影片风格</h2><p id="resultDescription"></p></div><span id="resultCount" class="result-count" aria-live="polite"></span></div>
+      <div id="results" class="results"></div>
+      <div id="empty" class="empty" hidden><h3>没有找到匹配内容</h3><p>尝试片名、年份或英文风格关键词。</p><button id="clearSearch" type="button" class="secondary">清除搜索与筛选</button></div>
+    </section>
+    <footer class="page-footer"><div>LemoLab 官方资料 · 文档 MIT / 示例图片 CC BY 4.0<br>本地快照 <span id="snapshotDate"></span> · 视频未下载</div><div><button id="licenseButton" type="button">来源与授权</button><a href="https://lemomo-ai.github.io/lemo-opuscar/" target="_blank" rel="noopener">在线原画廊（联网）</a><a href="https://github.com/lemomo-ai/lemo-opuscar" target="_blank" rel="noopener">LemoLab 原仓库（联网）</a></div></footer>
+  </main>
+  <dialog id="detailDialog" class="detail-dialog"><div id="detailBody"></div></dialog>
+  <dialog id="guideDialog" class="guide-dialog"><header class="guide-head"><h2 id="guideTitle"></h2><form method="dialog"><button class="icon-button" aria-label="关闭手册">×</button></form></header><div id="guideContent"></div></dialog>
+  <dialog id="copyFallback"><h2>复制内容</h2><p id="copyHelp"></p><textarea id="copyText" rows="14" readonly aria-label="待复制内容"></textarea><form method="dialog"><button class="secondary">完成</button></form></dialog>
+  <div id="notice" class="notice" role="status" hidden></div>
+</body>
+</html>

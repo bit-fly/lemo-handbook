@@ -1,0 +1,17 @@
+{
+  "revision": "f17136060781a0068a7951245a3aa7835a7230de",
+  "styles": 66,
+  "categories": 11,
+  "stylePrompts": 66,
+  "styleDemoDocuments": 66,
+  "films": 98,
+  "filmChinesePrompts": 98,
+  "filmEnglishPrompts": 98,
+  "filmDirectorNotes": 98,
+  "shots": 302,
+  "localImages": 164,
+  "styleChineseDemoTranslations": 66,
+  "styleChineseCameraTranslations": 66,
+  "starterIdeas": 624,
+  "errors": []
+}

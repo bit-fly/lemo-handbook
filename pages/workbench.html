@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>阅读工作台 · Lemo-Opuscar 本地手册</title>
+  <link rel="stylesheet" href="../assets/handbook.css">
+  <script defer src="../assets/content.js"></script>
+  <script defer src="../assets/handbook.js"></script>
+</head>
+<body data-layout="workbench" data-root="../">
+  <a class="skip-link" href="#catalog">跳到风格目录</a>
+  <header class="masthead">
+    <a class="identity" href="../index.html"><span class="wordmark">Lemo–Opuscar</span><span class="edition">本地使用手册</span></a>
+    <nav class="toplinks" aria-label="手册导航"><button type="button" data-guide="start">开始使用</button><button type="button" data-guide="director">导演手册</button><button type="button" data-guide="index">完整索引</button><span class="offline-indicator">本地资料快照</span></nav>
+  </header>
+  <nav id="viewMode" class="view-toolbar" aria-label="切换阅读方式"><span>阅读方式</span><div class="layout-switch"><a href="catalog.html" data-layout-link="catalog">图像目录</a><a href="workbench.html" data-layout-link="workbench" aria-current="page">阅读工作台</a><a href="cinema.html" data-layout-link="cinema">放映阅读室</a></div><button type="button" data-guide="start">使用指南</button></nav>
+  <section class="bench-heading">
+    <div><h1>让风格与做法，始终在手边。</h1><p>66 个技能风格与 98 个影片案例。原文完整保留，调用模板独立标注。</p></div>
+    <label class="search-field"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 5 5"></path></svg><input id="search" type="search" placeholder="搜索当前集合中的风格、片名或提示词" aria-label="搜索当前资源集合"><kbd>/</kbd></label>
+  </section>
+  <main id="catalog" class="bench-grid">
+    <aside class="bench-sidebar">
+      <h2 id="filterLabel">按风格分类</h2><nav id="filters" class="filters" aria-label="分类筛选"></nav>
+      <div class="sidebar-guides"><h2>创作手册</h2><button type="button" data-guide="start">技能使用流程</button><button type="button" data-guide="director">导演与镜头</button><button type="button" data-guide="technique">制作与工具</button><button type="button" data-guide="my-styles">制作自己的风格</button></div>
+    </aside>
+    <section class="bench-list" aria-label="风格列表">
+      <nav class="collection-tabs" aria-label="资源集合"><button type="button" data-mode="styles">技能风格 <span>66</span></button><button type="button" data-mode="films">影片案例 <span>98</span></button></nav>
+      <div class="results-heading"><div><h2 id="resultTitle">技能风格库</h2><p id="resultDescription"></p></div><span id="resultCount" class="result-count" aria-live="polite"></span></div>
+      <div id="results" class="results"></div>
+      <div id="empty" class="empty" hidden><h3>没有匹配内容</h3><p>也可以搜索英文原文。</p><button id="clearSearch" type="button" class="secondary">清除搜索与筛选</button></div>
+    </section>
+    <section id="inlineReader" class="inline-reader" aria-label="风格文档阅读区"></section>
+  </main>
+  <footer class="page-footer"><div>LemoLab 官方资料 · 文档 MIT / 示例图片 CC BY 4.0 · 本地快照 <span id="snapshotDate"></span><br>未下载视频；66 个技能风格与 98 个影片风格案例为两个独立集合。</div><div><button id="licenseButton" type="button">来源与授权</button><a href="https://github.com/lemomo-ai/lemo-opuscar" target="_blank" rel="noopener">LemoLab 原仓库（联网）</a></div></footer>
+  <dialog id="guideDialog" class="guide-dialog"><header class="guide-head"><h2 id="guideTitle"></h2><form method="dialog"><button class="icon-button" aria-label="关闭手册">×</button></form></header><div id="guideContent"></div></dialog>
+  <dialog id="copyFallback"><h2>复制内容</h2><p id="copyHelp"></p><textarea id="copyText" rows="14" readonly aria-label="待复制内容"></textarea><form method="dialog"><button class="secondary">完成</button></form></dialog>
+  <div id="notice" class="notice" role="status" hidden></div>
+</body>
+</html>
