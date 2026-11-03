@@ -5,12 +5,37 @@
   const root = document.body.dataset.root || "../";
   const layout = document.body.dataset.layout;
   const $ = (selector) => document.querySelector(selector);
+  $(".layout-switch").insertAdjacentHTML("beforeend", `<a href="favorites.html" data-layout-link="favorites"${layout === "favorites" ? ' aria-current="page"' : ""}>我的收藏</a>`);
   const esc = (value) => String(value).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const local = (path) => root + path;
   const markup = (value) => value.replaceAll("@@ROOT@@", root);
   const saved = new URLSearchParams(location.hash.slice(1));
+  const isFavorites = layout === "favorites";
+  const modes = isFavorites ? ["all", "styles", "films"] : ["styles", "films"];
+  const keyOf = (item) => `${item.kind}:${item.id}`;
+  const findItem = (key) => {
+    const [kind, id] = String(key).split(":");
+    return (kind === "style" ? data.styles : kind === "film" ? data.films : []).find((item) => item.id === id);
+  };
+  const FAV_KEY = "lemo-handbook-favorites";
+  let storageWarning = "";
+  const favs = (() => {
+    let stored = [];
+    try {
+      stored = JSON.parse(localStorage.getItem(FAV_KEY) || "[]");
+      if (!Array.isArray(stored)) throw new Error("收藏数据格式无效");
+    } catch (error) { storageWarning = `无法读取收藏：${error.message}`; }
+    // Some browsers isolate localStorage per file:// page, so the layout links carry the list too.
+    const carried = location.protocol === "file:" && saved.has("favs") ? saved.get("favs").split(",").filter(Boolean) : stored;
+    return new Set(carried.filter((key) => findItem(key)));
+  })();
+  function saveFavs() {
+    try { localStorage.setItem(FAV_KEY, JSON.stringify([...favs])); }
+    catch (error) { storageWarning = `收藏无法保存到浏览器，关闭页面后可能丢失：${error.message}`; }
+  }
+  saveFavs();
   const state = {
-    mode: ["styles", "films"].includes(saved.get("mode")) ? saved.get("mode") : layout === "cinema" ? "films" : "styles",
+    mode: isFavorites ? "all" : modes.includes(saved.get("mode")) ? saved.get("mode") : layout === "cinema" ? "films" : "styles",
     category: saved.get("category") || "",
     query: saved.get("q") || "",
     selected: null,
@@ -30,9 +55,21 @@
     ...featuredSlugs.map((slug) => data.styles.find((s) => s.slug === slug)),
     ...data.styles.filter((s) => !featuredSlugs.includes(s.slug)),
   ];
-  const current = () => state.mode === "styles" ? orderedStyles : data.films;
+  const current = () => {
+    if (isFavorites) {
+      const pool = state.mode === "styles" ? data.styles : state.mode === "films" ? data.films : [...data.styles, ...data.films];
+      return pool.filter((item) => favs.has(keyOf(item)));
+    }
+    return state.mode === "styles" ? orderedStyles : data.films;
+  };
   const categoryOf = (item) => item.kind === "style" ? item.cat : item.chapter;
   const selectedDoc = () => state.selected && (state.selected.kind === "style" ? state.selected.styleDoc.raw : state.selected[`prompt_${state.lang}`]);
+  const video = (item) => item.kind === "style"
+    ? `https://lemomo-ai.github.io/lemo-opuscar/films/${encodeURIComponent(item.slug)}.mp4`
+    : `https://lemomo-ai.github.io/lemo-opuscar/films/opuscar98.mp4#t=${item.t0},${Number((item.t0 + item.dur).toFixed(3))}`;
+  const videoImage = (item) => `<a class="video-image" href="${video(item)}" target="_blank" rel="noopener" aria-label="观看${esc(name(item))}的官方示例视频（联网，新窗口）"><img class="detail-image" src="${local(item.image)}" alt="${esc(name(item))}原站画面"><span>观看官方示例视频（联网）</span></a>`;
+  const favoriteIcon = `<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></svg>`;
+  const favoriteButton = (item) => `<button type="button" class="favorite-button" data-favorite="${esc(keyOf(item))}" aria-pressed="${favs.has(keyOf(item))}" aria-label="${favs.has(keyOf(item)) ? "取消收藏" : "收藏"}${esc(name(item))}" title="${favs.has(keyOf(item)) ? "取消收藏" : "收藏"}">${favoriteIcon}</button>`;
 
   function syncLayoutLinks() {
     const params = new URLSearchParams();
@@ -46,9 +83,15 @@
     }
     if (state.topic) params.set("topic", state.topic);
     if (state.duration !== "60") params.set("duration", state.duration);
+    params.set("favs", [...favs].join(","));
     document.querySelectorAll("[data-layout-link]").forEach((link) => {
       link.href = `${link.dataset.layoutLink}.html#${params}`;
     });
+    if (location.protocol === "file:") {
+      const currentHash = new URLSearchParams(location.hash.slice(1));
+      currentHash.set("favs", [...favs].join(","));
+      history.replaceState(null, "", `#${currentHash}`);
+    }
   }
 
   function notice(message) {
@@ -83,23 +126,23 @@
   }
 
   function categories() {
-    const values = state.mode === "styles"
+    const values = state.mode === "all" ? [] : state.mode === "styles"
       ? [...new Set(data.styles.map((s) => s.cat))].map((id) => ({ id, title: id }))
       : data.chapters.map((c) => ({ id: c.id, title: c.zh, years: c.years }));
     $("#filters").innerHTML = `<button type="button" class="filter ${!state.category ? "active" : ""}" data-category="" aria-pressed="${!state.category}">全部 <span>${current().length}</span></button>` +
       values.map((value) => `<button type="button" class="filter ${state.category === value.id ? "active" : ""}" data-category="${esc(value.id)}" aria-pressed="${state.category === value.id}">${esc(value.title)} <span>${current().filter((item) => categoryOf(item) === value.id).length}</span></button>`).join("");
-    $("#filterLabel").textContent = state.mode === "styles" ? "按风格分类" : "按影片年代";
+    $("#filterLabel").textContent = state.mode === "all" ? "我的收藏" : state.mode === "styles" ? "按风格分类" : "按影片年代";
   }
 
   function card(item, index) {
     const film = item.kind === "film";
     const caption = film ? item.style_zh : item.line_cn;
-    return `<button type="button" class="style-card ${state.selected === item ? "selected" : ""}" data-open="${esc(item.id)}" aria-label="查看${esc(name(item))}">
-      <div class="frame"><img src="${local(item.image)}" alt="${esc(name(item))}的官方示例画面" ${index < 6 ? 'fetchpriority="high"' : 'loading="lazy"'}><span class="frame-meta">${film ? esc(item.year) : `${item.dur} 秒`}</span></div>
-      <div class="card-copy"><div class="card-line"><span>${film ? "OPUSCAR 98" : esc(item.cat)}</span><span>${film ? `#${String(item.no).padStart(2, "0")}` : esc(item.slug)}</span></div>
+    return `<article class="style-card ${state.selected === item ? "selected" : ""}">
+      <div class="card-media"><a class="frame" href="${video(item)}" target="_blank" rel="noopener" aria-label="观看${esc(name(item))}的官方示例视频（联网，新窗口）"><img src="${local(item.image)}" alt="${esc(name(item))}的官方示例画面" ${index < 6 ? 'fetchpriority="high"' : 'loading="lazy"'}><span class="frame-meta">${film ? esc(item.year) : `${item.dur} 秒`}</span><span class="video-hint">原视频 · 联网</span></a><div class="card-actions">${favoriteButton(item)}</div></div>
+      <button type="button" class="card-copy" data-open="${esc(item.id)}" aria-label="查看${esc(name(item))}的提示词与制作说明"><span class="card-line"><span>${film ? "OPUSCAR 98" : esc(item.cat)}</span><span>${film ? `#${String(item.no).padStart(2, "0")}` : esc(item.slug)}</span></span>
       <h3>${esc(name(item))}</h3><p class="english-title">${esc(subtitle(item))}</p><p class="card-description">${esc(caption)}</p>
-      <span class="card-link">${film ? `查看提示词与导演编排（${item.shots.length} 镜头）` : "查看提示词和制作说明"}</span></div>
-    </button>`;
+      <span class="card-link">${film ? `查看提示词与导演编排（${item.shots.length} 镜头）` : "查看提示词和制作说明"}</span></button>
+    </article>`;
   }
 
   function render() {
@@ -118,6 +161,12 @@
       ? "66 种可用风格。看画面，再阅读提示词与制作规范。"
       : "98 个影片段落，各有独立提示词、镜头拆解与导演编排；不是新增 98 个技能风格。";
     $("#empty").hidden = results.length !== 0;
+    if (isFavorites) {
+      $("#resultTitle").textContent = "我的收藏";
+      $("#resultDescription").textContent = "收藏保存在当前浏览器，不会上传或跨设备同步。点击图片看原视频，点击文字阅读手册。";
+      $("#empty h3").textContent = favs.size ? "没有匹配的收藏" : "还没有收藏";
+      $("#empty p").textContent = favs.size ? "清除搜索或切换资源集合。" : "到图像目录、工作台或放映阅读室，点击空心爱心即可加入这里。";
+    }
     syncLayoutLinks();
   }
 
@@ -133,7 +182,7 @@
   const isStyleName = (item) => item.kind === "style" ? item.cn : item.style_zh;
 
   function readerLayoutLinks() {
-    return `<nav class="reader-layouts" aria-label="详情内切换阅读方式"><span>切换阅读方式</span>${[["catalog", "图像目录"], ["workbench", "阅读工作台"], ["cinema", "放映阅读室"]].map(([id, title]) => `<a href="${id}.html" data-layout-link="${id}" ${layout === id ? 'aria-current="page"' : ""}>${title}</a>`).join("")}</nav>`;
+    return `<nav class="reader-layouts" aria-label="详情内切换阅读方式"><span>切换阅读方式</span>${[["catalog", "图像目录"], ["workbench", "阅读工作台"], ["cinema", "放映阅读室"], ["favorites", "我的收藏"]].map(([id, title]) => `<a href="${id}.html" data-layout-link="${id}" ${layout === id ? 'aria-current="page"' : ""}>${title}</a>`).join("")}</nav>`;
   }
 
   function detail(item, tab) {
@@ -146,13 +195,13 @@
     let content = "";
     if (tab === "overview") {
       if (isStyle) {
-        content = `<img class="detail-image" src="${local(item.image)}" alt="${esc(item.cn)}原站画面"><div class="source-badge">官方索引 · 中文简介 / 英文规范</div>
+        content = `${videoImage(item)}<div class="source-badge">官方索引 · 中文简介 / 英文规范</div>
           <h3>${esc(item.film)}</h3><p>${esc(item.line_cn)}</p><p class="muted">${esc(item.line)}</p>
           <div class="info-grid"><div><span>影片时长</span><strong>${item.dur} 秒</strong></div><div><span>风格目录</span><strong>${esc(item.slug)}</strong></div><div><span>适用场景（原文）</span><strong>${esc(item.uses.join(" / "))}</strong></div></div>
           <h3>从画面到制作</h3><p>先阅读完整 STYLE.md，理解材质、色彩与镜头语法；DEMO.md 是一个示例的故事和实现，不是每部影片必须沿用的分镜。</p>
           <button type="button" class="primary" data-tab="prompt">阅读完整风格提示词</button>`;
       } else {
-        content = `<img class="detail-image" src="${local(item.image)}" alt="${esc(item.zh)}原站画面">${languageControls()}
+        content = `${videoImage(item)}${languageControls()}
           <div class="source-badge">官方原文 · OPUSCAR 98 · ${esc(item.render)}</div><h3>${esc(english ? item.style_en : item.style_zh)}</h3><p>${esc(item[`desc_${state.lang}`])}</p>
           <div class="tags">${item[`blend_${state.lang}`].map((tag) => `<span>${esc(tag)}</span>`).join("")}</div>
           <div class="info-grid"><div><span>原合集位置</span><strong>${timecode(item.t0)}</strong></div><div><span>段落时长</span><strong>${item.dur} 秒</strong></div><div><span>镜头总数</span><strong>${item.shots.length}</strong></div></div>
@@ -183,7 +232,7 @@
         <textarea id="invokeText" readonly rows="13" aria-label="可复制调用模板"></textarea><button type="button" class="primary" data-copy="invoke">复制调用模板</button>${ideaList(item)}`;
     }
     const sourcePath = isStyle ? `styles/${item.id}/${tab === "demo" ? "DEMO.md" : "STYLE.md"}` : "styleboard/opuscar98_styles.json";
-    return `<header class="reader-head"><div><p>${esc(isStyle ? item.cat : `${item.year} · OPUSCAR 98 #${item.no}`)}</p><h2>${esc(name(item))}</h2><span>${esc(subtitle(item))}</span></div><button type="button" class="icon-button close-detail" data-close aria-label="关闭详情">×</button></header>
+    return `<header class="reader-head"><div><p>${esc(isStyle ? item.cat : `${item.year} · OPUSCAR 98 #${item.no}`)}</p><h2>${esc(name(item))}</h2><span>${esc(subtitle(item))}</span></div><div class="reader-actions">${favoriteButton(item)}<button type="button" class="icon-button close-detail" data-close aria-label="关闭详情">×</button></div></header>
       ${readerLayoutLinks()}<nav class="detail-tabs" aria-label="详情栏目">${tabs.map(([id, label]) => `<button type="button" data-tab="${id}" class="${tab === id ? "active" : ""}" aria-current="${tab === id ? "page" : "false"}">${label}</button>`).join("")}</nav>
       <div class="reader-content">${content}
         <footer class="source-footer"><span>来源：LemoLab / 文档 MIT，图片 CC BY 4.0 / ${data.revision.slice(0, 8)}</span><a href="${local(`source/${sourcePath}`)}" target="_blank" rel="noopener">本地原文</a>${isStyle ? `<button type="button" class="credits-link" data-credits="${esc(item.slug)}">原样片素材署名</button>` : ""}<a href="${data.repository}/blob/${data.revision}/${sourcePath}" target="_blank" rel="noopener">GitHub 原文（联网）</a></footer>
@@ -243,6 +292,7 @@
   function featureFilm(no = 1) {
     const item = data.films.find((film) => film.no === no);
     $("#featureImage")?.setAttribute("src", local(item.image));
+    $("#featureVideo")?.setAttribute("href", video(item));
     if (!$("#featureTitle")) return;
     $("#featureTitle").textContent = `${item.zh} / ${item.title}`;
     $("#featureStyle").textContent = item.style_zh;
@@ -255,6 +305,21 @@
   document.addEventListener("click", (event) => {
     const button = event.target.closest("button, a");
     if (!button) return;
+    if (button.dataset.favorite) {
+      const key = button.dataset.favorite;
+      if (favs.has(key)) favs.delete(key); else favs.add(key);
+      saveFavs();
+      document.querySelectorAll("[data-favorite]").forEach((node) => {
+        const item = findItem(node.dataset.favorite);
+        const active = favs.has(keyOf(item));
+        node.setAttribute("aria-pressed", String(active));
+        node.setAttribute("aria-label", `${active ? "取消收藏" : "收藏"}${name(item)}`);
+        node.setAttribute("title", active ? "取消收藏" : "收藏");
+      });
+      if (isFavorites) render(); else syncLayoutLinks();
+      notice(storageWarning || (favs.has(key) ? "已加入我的收藏" : "已取消收藏"));
+      return;
+    }
     if (button.dataset.mode) {
       state.mode = button.dataset.mode;
       state.category = "";
@@ -380,8 +445,14 @@
     else $("#inlineReader").hidden = true;
   }
   if (layout === "cinema") {
-    $("#filmstrip").innerHTML = data.films.slice(0, 9).map((film) => `<button type="button" data-feature-select="${film.no}" aria-label="预览${esc(film.zh)}"><img src="${local(film.image)}" alt=""><span>${esc(film.year)} · ${esc(film.zh)}</span></button>`).join("");
+    $("#filmstrip").innerHTML = data.films.slice(0, 9).map((film) => `<div class="filmstrip-item"><a href="${video(film)}" target="_blank" rel="noopener" aria-label="观看${esc(film.zh)}的官方示例视频（联网）"><img src="${local(film.image)}" alt="${esc(film.zh)}"></a><button type="button" data-feature-select="${film.no}" aria-label="预览${esc(film.zh)}"><span>${esc(film.year)} · ${esc(film.zh)}</span></button></div>`).join("");
     featureFilm();
   }
   $("#snapshotDate").textContent = data.retrievedAt.slice(0, 10);
+  if (storageWarning) notice(storageWarning);
+  if (layout === "workbench") {
+    matchMedia("(max-width: 999px)").addEventListener("change", (event) => {
+      if (event.matches && state.autoPreview) closeReader();
+    });
+  }
 })();

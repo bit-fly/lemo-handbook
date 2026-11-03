@@ -16,6 +16,7 @@ OUT = ROOT / "assets"
 MANIFEST = json.loads((SOURCE / "manifest.json").read_text(encoding="utf-8"))
 REV = MANIFEST["revision"]
 REPO = "https://github.com/lemomo-ai/lemo-opuscar"
+VIDEO_BASE = "https://lemomo-ai.github.io/lemo-opuscar/films/"
 TAGS = {
     "p", "h1", "h2", "h3", "h4", "h5", "h6", "a", "ul", "ol", "li",
     "pre", "code", "blockquote", "strong", "em", "hr", "br", "table",
@@ -117,8 +118,15 @@ def main():
     OUT.mkdir(exist_ok=True)
     styles = load("styleboard/catalog.json")
     films = load("styleboard/opuscar98_styles.json")
+    gallery = (SOURCE / "live-gallery.html").read_text(encoding="utf-8")
+    gallery_videos = set(re.findall(r'data-src="films/([\w-]+)\.mp4"', gallery))
+    if "opuscar98" not in gallery_videos:
+        raise SystemExit("Gallery snapshot has no OPUSCAR 98 film")
     for style in styles:
         slug = style["slug"]
+        if slug not in gallery_videos:
+            raise SystemExit(f"Gallery snapshot has no film for {slug}")
+        style["video"] = f"{VIDEO_BASE}{slug}.mp4"
         style["kind"] = "style"
         style["id"] = slug
         style["image"] = f"source/styleboard/img/{slug}_0.jpg"
@@ -150,6 +158,7 @@ def main():
         film["image"] = f"source/styleboard/img/opuscar98/{film['no']:02d}.jpg"
         film["search"] = json.dumps(film, ensure_ascii=False).lower()
         film["ideas"] = film_ideas.get(str(film["no"]), [])
+        film["video"] = f"{VIDEO_BASE}opuscar98.mp4#t={film['t0']:g},{film['t0'] + film['dur']:g}"
     guides = {
         "start": {"title": "技能使用流程", **document("AGENTS.md")},
         "director": {"title": "导演与镜头手册", **document("DIRECTOR.md")},

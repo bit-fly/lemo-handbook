@@ -42,8 +42,8 @@ async def main():
                 assert 0 < await page.locator(".style-card").count() < count
                 await page.locator("#filters button").first.click()
             await page.locator("#search").fill("Wings")
-            assert await page.locator('.style-card[data-open="1"]').count() == 1
-            await page.locator('.style-card[data-open="1"]').click()
+            assert await page.locator('.style-card [data-open="1"]').count() == 1
+            await page.locator('.style-card [data-open="1"]').click()
             for tab in ["prompt", "shots", "direction", "invoke", "overview"]:
                 await page.locator(f'button[data-tab="{tab}"]').first.click()
                 if tab == "prompt":
@@ -74,7 +74,7 @@ async def main():
             await page.locator("button[data-close]").click()
             await page.locator("#search").fill("")
             await page.locator('button[data-mode="styles"]').click()
-            await page.locator('.style-card[data-open="ink-wash"]').click()
+            await page.locator('.style-card [data-open="ink-wash"]').click()
             for tab in ["prompt", "camera", "demo", "invoke"]:
                 await page.locator(f'button[data-tab="{tab}"]').first.click()
                 if tab == "prompt":
@@ -110,12 +110,12 @@ async def main():
             await page.goto((PAGES / f"{stem}.html").as_uri())
             await page.wait_for_function("document.querySelectorAll('.style-card').length > 0")
             assert await page.evaluate("document.documentElement.scrollWidth <= innerWidth"), f"Mobile overflow: {number}"
-            assert await page.locator(".layout-switch a").count() == 3
+            assert await page.locator(".layout-switch a").count() == 4
             for link in await page.locator(".layout-switch a").all():
                 assert await link.is_visible()
                 assert (await link.bounding_box())["height"] >= 44
             await page.screenshot(path=str(PREVIEWS / f"{stem}-mobile.png"))
-            await page.locator('.style-card[data-open="1"]' if number == 3 else '.style-card[data-open="ink-wash"]').click()
+            await page.locator('.style-card [data-open="1"]' if number == 3 else '.style-card [data-open="ink-wash"]').click()
             await page.locator('button[data-tab="prompt"]').first.click()
             assert await page.evaluate("document.documentElement.scrollWidth <= innerWidth"), f"Reader mobile overflow: {number}"
             await page.locator("button[data-close]").click()
@@ -124,7 +124,7 @@ async def main():
         await page.goto((PAGES / "catalog.html").as_uri())
         await page.locator('button[data-category="手绘与绘画"]').click()
         await page.locator("#search").fill("水墨")
-        await page.locator('.style-card[data-open="ink-wash"]').click()
+        await page.locator('.style-card [data-open="ink-wash"]').click()
         await page.locator('button[data-tab="camera"]').click()
         for target in ["workbench", "cinema", "catalog"]:
             await page.locator(f'.reader-layouts a[data-layout-link="{target}"]').click()
